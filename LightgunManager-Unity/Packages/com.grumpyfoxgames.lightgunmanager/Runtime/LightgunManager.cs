@@ -142,7 +142,7 @@ namespace GrumpyFoxGames
             // Look for connected COM ports available to look for the target devices
             foreach (string connectedPortName in SerialPort.GetPortNames())
             {
-                Debug.Log($"Searching for {connectedPortName}...");
+                Debug.Log($"Analyzing \"{connectedPortName}\"...");
 
                 foreach (var devicePortName in targetDevicePortNames)
                 {
@@ -152,7 +152,7 @@ namespace GrumpyFoxGames
 
                     try
                     {
-                        Debug.Log($"Attempting to connect to {connectedPortName}");
+                        Debug.Log($"Attempting to connect to \"{connectedPortName}\"");
                         serialPort = new SerialPort(connectedPortName, 9600)
                         {
                             ReadTimeout = 500, // Prevent infinite blocking
@@ -165,7 +165,7 @@ namespace GrumpyFoxGames
 
                         if (serialPort.IsOpen)
                         {
-                            Debug.Log($"Connected to {connectedPortName}");
+                            Debug.Log($"Connected to \"{connectedPortName}\"");
                             serialPort.WriteLine(startCommand);
                             serialPort.WriteLine("F3.2.1");
                             isConnected = true;
@@ -174,7 +174,7 @@ namespace GrumpyFoxGames
                     }
                     catch (Exception ex)
                     {
-                        Debug.LogWarning($"Failed to connect to {connectedPortName}: {ex.Message}");
+                        Debug.LogWarning($"Failed to connect to \"{connectedPortName}\": {ex.Message}");
                     }
 
                 }
