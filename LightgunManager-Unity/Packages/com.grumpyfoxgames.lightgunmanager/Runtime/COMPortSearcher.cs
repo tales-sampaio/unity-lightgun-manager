@@ -7,7 +7,7 @@ using Microsoft.Win32;
 
 namespace GrumpyFoxGames
 {
-    public class RegistrySearch
+    internal static class COMPortSearcher
     {
         public static List<string> FindCOMPortsByVIDPID(string vid, string pid)
         {

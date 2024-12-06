@@ -132,7 +132,7 @@ namespace GrumpyFoxGames
         private void SearchAndConnect()
         {
             // Look for defined port names for the specific device
-            var targetDevicePortNames = RegistrySearch.FindCOMPortsByVIDPID(VID, PID);
+            var targetDevicePortNames = COMPortSearcher.FindCOMPortsByVIDPID(VID, PID);
 
             // foreach (var devicePortName in targetDevicePortNames)
             // {
