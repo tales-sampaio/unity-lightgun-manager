@@ -131,7 +131,7 @@ GameObject:
   - component: {fileID: 75465955}
   - component: {fileID: 75465956}
   m_Layer: 0
-  m_Name: Debug
+  m_Name: DebugText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -184,7 +184,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "Cursor:\t(0,0)\nShoot:\tFalse\nReload:\tFalse"
+  m_text: "Port:\t \t -\nConnected:\t -\nControl:\t -\nCursor:\t (-, -)\nShoot:\t
+    -\nReload:\t -"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -440,6 +441,58 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &804586560
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 804586562}
+  - component: {fileID: 804586561}
+  m_Layer: 0
+  m_Name: App
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &804586561
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 804586560}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45604efd01264974ea637a589831f0d9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _playerInput: {fileID: 939932625}
+  cursorSpeed: 0.75
+  debugText: {fileID: 75465956}
+  canvasRect: {fileID: 263270938}
+  cursorRect: {fileID: 823743538}
+  moveCursorAction: {fileID: -7967618988401243662, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  shootAction: {fileID: 306175691072625748, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  reloadAction: {fileID: 3170204661674974105, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+--- !u!4 &804586562
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 804586560}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &823743537
 GameObject:
   m_ObjectHideFlags: 0
@@ -526,9 +579,8 @@ GameObject:
   m_Component:
   - component: {fileID: 939932626}
   - component: {fileID: 939932625}
-  - component: {fileID: 939932627}
   m_Layer: 0
-  m_Name: Player
+  m_Name: PlayerInput
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -561,8 +613,8 @@ MonoBehaviour:
   m_ActionEvents:
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 939932627}
-        m_TargetAssemblyTypeName: Player, Assembly-CSharp
+      - m_Target: {fileID: 804586561}
+        m_TargetAssemblyTypeName: App, Assembly-CSharp
         m_MethodName: OnMoveCursor
         m_Mode: 0
         m_Arguments:
@@ -577,8 +629,8 @@ MonoBehaviour:
     m_ActionName: 'Player/Cursor[/Mouse/position]'
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 939932627}
-        m_TargetAssemblyTypeName: Player, Assembly-CSharp
+      - m_Target: {fileID: 804586561}
+        m_TargetAssemblyTypeName: App, Assembly-CSharp
         m_MethodName: OnShoot
         m_Mode: 0
         m_Arguments:
@@ -593,8 +645,8 @@ MonoBehaviour:
     m_ActionName: 'Player/Shoot[/Mouse/leftButton,/DualShock4GamepadHID/rightTrigger]'
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 939932627}
-        m_TargetAssemblyTypeName: Player, Assembly-CSharp
+      - m_Target: {fileID: 804586561}
+        m_TargetAssemblyTypeName: App, Assembly-CSharp
         m_MethodName: OnReload
         m_Mode: 0
         m_Arguments:
@@ -620,76 +672,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 939932624}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &939932627
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 939932624}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 45604efd01264974ea637a589831f0d9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  cursorSpeed: 0.75
-  debug: {fileID: 75465956}
-  canvasRect: {fileID: 263270938}
-  cursorRect: {fileID: 823743538}
-  lightgunManager: {fileID: 1312990443}
-  shootCommand: F0.2.1F1.2.1
-  reloadCommand: F4.2.1
---- !u!1 &1312990442
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1312990444}
-  - component: {fileID: 1312990443}
-  m_Layer: 0
-  m_Name: LightgunManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1312990443
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1312990442}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 66cfdb11b84f3004f8b9a498035721b7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  VID: 2341
-  PID: 8046
-  startCommand: S6M0.0M1.2
-  stopCommand: M1.1M3.0E
-  command: F1.2.1
-  sendCommand: 0
---- !u!4 &1312990444
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1312990442}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1003,4 +986,4 @@ SceneRoots:
   - {fileID: 361726395}
   - {fileID: 263270938}
   - {fileID: 939932626}
-  - {fileID: 1312990444}
+  - {fileID: 804586562}

@@ -2,59 +2,47 @@ using System;
 using System.IO.Ports;
 using System.Threading;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace GrumpyFoxGames
 {
-    public class LightgunManager : MonoBehaviour
+    public static class LightgunManager
     {
-        private Thread communicationThread;
-        private SerialPort serialPort;
-        private ConcurrentQueue<string> commandQueue = new ConcurrentQueue<string>();
-        private bool isRunning = false;
-        private bool isConnected = false;
-        // private string deviceName = "gun4IR"; // Expected device name identifier
+        private static bool isRunning;
+        private static bool isConnected;
+        private static bool isVerbose;
+        private static int pollingRate;
+        
+        private static Thread communicationThread;
+        private static SerialPort serialPort;
+        private static ConcurrentQueue<string> commandQueue = new ();
+        
+        private static string VID = "2341";
+        private static string PID = "8046";
+        private static string startCommand = "S6M0.0M1.2F3.2.1";
+        private static string stopCommand = "M1.1M3.0EF2.2.2";
+        private static string shootCommand = "F0.2.1F1.2.1";
+        private static string reloadCommand = "F4.2.1";
 
-        // public string serialPortName = "COM1";
-        [SerializeField] private string VID = "2341";
-        [SerializeField] private string PID = "8046";
-        [SerializeField] private string startCommand = "S6M1.2M3.1";
-        [SerializeField] private string stopCommand = "M1.1M3.0E";
-        [SerializeField] private string command;
-        [SerializeField] private bool sendCommand;
+#region Public
 
-        public bool IsConnected => isConnected;
-        public string ConnectedPort => serialPort != null ? serialPort.PortName : string.Empty;
+        public static bool IsConnected => isConnected;
+        public static string ConnectedPort => serialPort != null ? serialPort.PortName : string.Empty;
 
-        private void OnEnable()
+        public static void Start(int pollingRateMs = 16, bool verboseLogging = false)
         {
-            // Debug.LogError("Open Debug");
+            if (pollingRateMs < 16)
+            {
+                LogError("Polling rate must be at least 10ms.");
+                pollingRateMs = 10;
+            }
+            
+            Log($"Starting Lightgun Manager (refresh rate: {pollingRateMs}ms)");
+            isVerbose = verboseLogging;
             StartCommunicationThread();
         }
 
-        private void OnDisable()
-        {
-            isRunning = false;
-
-            if (communicationThread != null && communicationThread.IsAlive)
-            {
-                communicationThread.Join();
-            }
-
-            Disconnect();
-        }
-
-        private void LateUpdate()
-        {
-            if (sendCommand)
-            {
-                SendCommand(command);
-                sendCommand = false;
-            }
-        }
-
-        private void OnApplicationQuit()
+        public static void Stop()
         {
             isRunning = false;
 
@@ -65,12 +53,38 @@ namespace GrumpyFoxGames
 
             Disconnect();
         }
+        
+        public static void SendCommand(string command)
+        {
+            if (isConnected)
+            {
+                Log($"Sending command: {command}");
+                commandQueue.Enqueue(command);
+            }
+            else
+            {
+                LogWarning($"Cannot send command \"{command}\", device is not connected");
+            }
+        }
 
-        private void StartCommunicationThread()
+        public static void SendCommand_Shoot()
+        {
+            SendCommand(shootCommand);
+        }
+        
+        public static void SendCommand_Reload()
+        {
+            SendCommand(reloadCommand);
+        }
+        
+#endregion
+
+#region private
+        private static void StartCommunicationThread()
         {
             isRunning = true;
 
-            communicationThread = new Thread(CommunicationLoop)
+            communicationThread = new Thread(CommunicationThreadLoop)
             {
                 IsBackground = true
             };
@@ -78,7 +92,7 @@ namespace GrumpyFoxGames
             communicationThread.Start();
         }
 
-        private void CommunicationLoop()
+        private static void CommunicationThreadLoop()
         {
             while (isRunning)
             {
@@ -86,22 +100,20 @@ namespace GrumpyFoxGames
                 {
                     if (!isConnected)
                     {
-                        // Debug.LogError("not connected");
+                        LogWarning("Not connected yet...");
                         SearchAndConnect();
                     }
                     else if (serialPort != null)
                     {
-                        // Debug.Log(serialPort.IsOpen);
                         if (!serialPort.IsOpen)
                         {
                             continue;
                         }
 
-                        // Debug.LogError("handling commands");
                         // Handle queued commands
                         if (commandQueue.TryDequeue(out string command))
                         {
-                            // Debug.Log($"dequeuing: \"{command}\"");
+                            // Log($"dequeuing: \"{command}\"");
                             serialPort.WriteLine(command);
                         }
 
@@ -109,7 +121,7 @@ namespace GrumpyFoxGames
                         if (serialPort.BytesToRead > 0)
                         {
                             var response = serialPort.ReadLine();
-                            // Debug.Log($"Arduino Response: {response}");
+                            // Log($"Arduino Response: {response}");
                         }
                     }
                 }
@@ -119,40 +131,35 @@ namespace GrumpyFoxGames
                 }
                 catch (Exception ex)
                 {
-                    Debug.LogError($"Communication Error: {ex.Message}");
+                    LogError($"Communication Error: {ex.Message}");
                     Disconnect();
                 }
 
-                Thread.Sleep(10); // Prevent tight loop
+                Thread.Sleep(pollingRate); // Prevent tight loop
             }
 
-            // Debug.LogError("Finished communication loop");
+            LogWarning("Finished communication loop");
         }
 
-        private void SearchAndConnect()
+        private static void SearchAndConnect()
         {
             // Look for defined port names for the specific device
             var targetDevicePortNames = COMPortSearcher.FindCOMPortsByVIDPID(VID, PID);
 
-            // foreach (var devicePortName in targetDevicePortNames)
-            // {
-            //     Debug.Log(devicePortName);
-            // }
-
             // Look for connected COM ports available to look for the target devices
             foreach (string connectedPortName in SerialPort.GetPortNames())
             {
-                Debug.Log($"Analyzing \"{connectedPortName}\"...");
+                Log($"Analyzing \"{connectedPortName}\"...");
 
                 foreach (var devicePortName in targetDevicePortNames)
                 {
-                    // Debug.Log($"Try match {devicePortName} to {connectedPortName}");
 
                     if (!connectedPortName.Equals(devicePortName)) continue;
 
                     try
                     {
-                        Debug.Log($"Attempting to connect to \"{connectedPortName}\"");
+                        Log($"Attempting to connect to \"{connectedPortName}\"");
+                        
                         serialPort = new SerialPort(connectedPortName, 9600)
                         {
                             ReadTimeout = 500, // Prevent infinite blocking
@@ -160,49 +167,30 @@ namespace GrumpyFoxGames
                         };
 
                         serialPort.Open();
-
                         Thread.Sleep(1000); // Wait for the port to stabilize
 
                         if (serialPort.IsOpen)
                         {
-                            Debug.Log($"Connected to \"{connectedPortName}\"");
+                            Log($"Connected to \"{connectedPortName}\"");
                             serialPort.WriteLine(startCommand);
-                            serialPort.WriteLine("F3.2.1");
                             isConnected = true;
                             return;
                         }
                     }
                     catch (Exception ex)
                     {
-                        Debug.LogWarning($"Failed to connect to \"{connectedPortName}\": {ex.Message}");
+                        LogWarning($"Failed to connect to \"{connectedPortName}\": {ex.Message}");
                     }
 
                 }
-
-
-
             }
 
-            Debug.LogWarning("No suitable device found");
+            LogWarning("No suitable device found!");
         }
 
-
-        public void SendCommand(string command)
+        private static void Disconnect()
         {
-            if (isConnected)
-            {
-                Debug.Log($"Sending command: {command}");
-                commandQueue.Enqueue(command);
-            }
-            else
-            {
-                Debug.LogWarning($"Cannot send command \"{command}\", device is not connected");
-            }
-        }
-
-        private void Disconnect()
-        {
-            // Debug.LogError("Disconnecting");
+            LogWarning("Disconnecting...");
             isConnected = false;
 
             if (serialPort != null)
@@ -210,18 +198,39 @@ namespace GrumpyFoxGames
                 try
                 {
                     serialPort.WriteLine(stopCommand);
-                    serialPort.WriteLine("F2.2.2");
                     serialPort.Close();
                 }
                 catch (Exception ex)
                 {
-                    Debug.LogWarning($"Error closing serial port: {ex.Message}");
+                    LogWarning($"Error closing serial port: {ex.Message}");
                 }
             }
 
             serialPort = null;
         }
-
-
+        
+#endregion
+        
+#region Logger
+        
+        private static void Log(string message)
+        {
+            if (!isVerbose) return;
+            Debug.Log(message);
+        }
+        
+        private static void LogWarning(string message)
+        {
+            if (!isVerbose) return;
+            Debug.LogWarning(message);
+        }
+        
+        private static void LogError(string message)
+        {
+            if (!isVerbose) return;
+            Debug.LogError(message);
+        }
+        
+#endregion
     }
 }

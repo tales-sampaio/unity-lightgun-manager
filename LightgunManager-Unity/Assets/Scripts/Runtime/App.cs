@@ -3,15 +3,16 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using GrumpyFoxGames;
 
-public class LightgunDebug : MonoBehaviour
+public class App : MonoBehaviour
 {
+    [SerializeField] private PlayerInput _playerInput;
     [SerializeField] private float cursorSpeed = 0.75f;
-    [SerializeField] private TextMeshProUGUI debug;
+    [SerializeField] private TextMeshProUGUI debugText;
     [SerializeField] private RectTransform canvasRect;
     [SerializeField] private RectTransform cursorRect;
-    [SerializeField] private LightgunManager lightgunManager;
-    [SerializeField] private string shootCommand = "F1.2.1F2.2.1";
-    [SerializeField] private string reloadCommand = "F4.2.1";
+    [SerializeField] private InputActionReference moveCursorAction;
+    [SerializeField] private InputActionReference shootAction;
+    [SerializeField] private InputActionReference reloadAction;
 
     private bool _shooting;
     private bool _reloading;
@@ -20,25 +21,30 @@ public class LightgunDebug : MonoBehaviour
     private InputAction _cursorAction;
     private InputAction _shootAction;
     private InputAction _reloadAction;
-    private PlayerInput _playerInput;
 
     private void Awake()
     {
         Application.targetFrameRate = -1;
         Application.runInBackground = true;
-        Cursor.visible = false;
-
+        // Cursor.visible = false;
         _cursorAction = InputSystem.actions.FindAction("Cursor");
         _shootAction = InputSystem.actions.FindAction("Shoot");
         _reloadAction = InputSystem.actions.FindAction("Reload");
-        _playerInput = GetComponent<PlayerInput>();
+        _playerInput.onActionTriggered += OnActionTriggered;
+        LightgunManager.Start();
+    }
+
+    private void OnDestroy()
+    {
+        _playerInput.onActionTriggered -= OnActionTriggered;
+        LightgunManager.Stop();
     }
 
     private void Update()
     {
-        debug.text = $"Port:\t {(lightgunManager.IsConnected ? lightgunManager.ConnectedPort : string.Empty)}\n" +
-                     $"Connected:\t {lightgunManager.IsConnected}\n" +
-                     // $"Control:\t {_lastControl}\n" +
+        debugText.text = $"Port:\t\t {(LightgunManager.IsConnected ? LightgunManager.ConnectedPort : string.Empty)}\n" +
+                     $"Connected:\t {LightgunManager.IsConnected}\n" +
+                     $"Control:\t {_lastControl}\n" +
                      $"Cursor:\t {_cursorTarget}\n" +
                      $"Shoot:\t {_shooting}\n" +
                      $"Reload:\t {_reloading}";
@@ -49,10 +55,26 @@ public class LightgunDebug : MonoBehaviour
         cursorRect.position = Vector2.Lerp(cursorRect.position, _cursorTarget, cursorSpeed);
     }
 
+    private void OnActionTriggered(InputAction.CallbackContext context)
+    {
+        if (context.action.name == moveCursorAction.name)
+        {
+            OnMoveCursor(context);
+        }
+        else if (context.action.name == shootAction.name)
+        {
+            OnShoot(context);
+        }
+        else if (context.action.name == reloadAction.name)
+        {
+            OnReload(context);
+        }
+    }
+    
     public void OnMoveCursor(InputAction.CallbackContext context)
     {
         var cursorValue = context.ReadValue<Vector2>();
-
+        
         switch (context.control.device)
         {
             case Gamepad gamepad:
@@ -86,8 +108,9 @@ public class LightgunDebug : MonoBehaviour
         if (!context.performed) return;
 
         _lastControl = _playerInput.currentControlScheme;
-        lightgunManager.SendCommand(shootCommand);
-        UnityEngine.Debug.Log("Shoot!");
+        
+        Debug.Log("Shoot!");
+        LightgunManager.SendCommand_Shoot();
     }
 
     public void OnReload(InputAction.CallbackContext context)
@@ -96,7 +119,8 @@ public class LightgunDebug : MonoBehaviour
         if (!context.performed) return;
 
         _lastControl = _playerInput.currentControlScheme;
-        lightgunManager.SendCommand(reloadCommand);
-        UnityEngine.Debug.Log("Reload!");
+        
+        Debug.Log("Reload!");
+        LightgunManager.SendCommand_Reload();
     }
 }
