@@ -11,7 +11,7 @@ namespace GrumpyFoxGames
         private static bool isRunning;
         private static bool isConnected;
         private static bool isVerbose;
-        private static int pollingRate;
+        private static int pollingRate = 16;
         
         private static Thread communicationThread;
         private static SerialPort serialPort;
@@ -29,15 +29,17 @@ namespace GrumpyFoxGames
         public static bool IsConnected => isConnected;
         public static string ConnectedPort => serialPort != null ? serialPort.PortName : string.Empty;
 
-        public static void Start(int pollingRateMs = 16, bool verboseLogging = false)
+        public static void Start(bool verboseLogging = false)
         {
-            if (pollingRateMs < 16)
+            // Read INI values
+            
+            if (pollingRate < 16)
             {
                 LogError("Polling rate must be at least 10ms.");
-                pollingRateMs = 10;
+                pollingRate = 10;
             }
             
-            Log($"Starting Lightgun Manager (refresh rate: {pollingRateMs}ms)");
+            Log($"Starting Lightgun Manager (polling rate: {pollingRate}ms)");
             isVerbose = verboseLogging;
             StartCommunicationThread();
         }
