@@ -21,8 +21,9 @@ namespace GrumpyFoxGames
         private static string PID = "8046";
         private static string startCommand = "S6M0.0M1.2F3.2.1";
         private static string stopCommand = "M1.1M3.0EF2.2.2";
-        private static string shootCommand = "F0.2.1F1.2.1";
+        private static string shootCommand = "F0.2.1";
         private static string reloadCommand = "F4.2.1";
+        private static string damageCommand = "F1.2.1";
 
 #region Public
 
@@ -77,6 +78,11 @@ namespace GrumpyFoxGames
         public static void SendCommand_Reload()
         {
             SendCommand(reloadCommand);
+        }
+        
+        public static void SendCommand_Damage()
+        {
+            SendCommand(damageCommand);
         }
         
 #endregion
