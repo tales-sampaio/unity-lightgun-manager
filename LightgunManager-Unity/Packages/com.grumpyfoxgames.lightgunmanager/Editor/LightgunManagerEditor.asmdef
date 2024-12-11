@@ -5,7 +5,8 @@
         "GUID:91e12786980713048a3710864c9a9c7f"
     ],
     "includePlatforms": [
-        "Editor"
+        "Editor",
+        "LinuxStandalone64"
     ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
