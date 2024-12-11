@@ -2,9 +2,16 @@
   "name": "com.grumpyfoxgames.lightgunmanager",
   "displayName": "Lightgun Manager",
   "version": "0.0.1",
-  "unity": "6000.0",
   "description": "Automatically detects lightguns and send commands through COM serial ports.",
-  "keywords": ["unity", "package", "tool", "lightgun", "gun4ir", "sinden", "retroshooter"],
+  "keywords": [
+    "unity",
+    "package",
+    "tool",
+    "lightgun",
+    "gun4ir",
+    "sinden",
+    "retroshooter"
+  ],
   "author": {
     "name": "Tales Sampaio",
     "email": "tales@grumpyfox.games",
