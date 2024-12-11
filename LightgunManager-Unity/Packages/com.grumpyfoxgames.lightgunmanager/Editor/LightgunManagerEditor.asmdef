@@ -1,0 +1,18 @@
+{
+    "name": "LightgunManagerEditor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:91e12786980713048a3710864c9a9c7f"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

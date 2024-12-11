@@ -15,15 +15,16 @@ namespace GrumpyFoxGames
         
         private static Thread communicationThread;
         private static SerialPort serialPort;
-        private static ConcurrentQueue<string> commandQueue = new ();
+        private static readonly ConcurrentQueue<string> commandQueue = new ();
         
-        private static string VID = "2341";
-        private static string PID = "8046";
-        private static string startCommand = "S6M0.0M1.2F3.2.1";
-        private static string stopCommand = "M1.1M3.0EF2.2.2";
-        private static string shootCommand = "F0.2.1";
-        private static string reloadCommand = "F4.2.1";
-        private static string damageCommand = "F1.2.1";
+        public static readonly string vid =               INIReader.GetValue("Gun4IR", "VID");
+        public static readonly string pid =               INIReader.GetValue("Gun4IR", "PID");
+        private static readonly string startCommand =     INIReader.GetValue("Gun4IR", "Start");
+        private static readonly string stopCommand =      INIReader.GetValue("Gun4IR", "Stop");
+        private static readonly string shootCommand =     INIReader.GetValue("Gun4IR", "Shoot");
+        private static readonly string reloadCommand =    INIReader.GetValue("Gun4IR", "Reload");
+        private static readonly string damageCommand =    INIReader.GetValue("Gun4IR", "Damage");
+        private static readonly string outOfAmmoCommand = INIReader.GetValue("Gun4IR", "OutOfAmmo");
 
 #region Public
 
@@ -85,9 +86,14 @@ namespace GrumpyFoxGames
             SendCommand(damageCommand);
         }
         
+        public static void SendCommand_OutOfAmmo()
+        {
+            SendCommand(outOfAmmoCommand);
+        }
+        
 #endregion
 
-#region private
+#region Private
         private static void StartCommunicationThread()
         {
             isRunning = true;
@@ -152,7 +158,7 @@ namespace GrumpyFoxGames
         private static void SearchAndConnect()
         {
             // Look for defined port names for the specific device
-            var targetDevicePortNames = COMPortSearcher.FindCOMPortsByVIDPID(VID, PID);
+            var targetDevicePortNames = COMPortSearcher.FindCOMPortsByVIDPID(vid, pid);
 
             // Look for connected COM ports available to look for the target devices
             foreach (string connectedPortName in SerialPort.GetPortNames())
