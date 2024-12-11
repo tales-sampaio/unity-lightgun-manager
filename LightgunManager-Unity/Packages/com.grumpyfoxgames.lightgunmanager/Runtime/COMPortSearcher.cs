@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 
 #if UNITY_STANDALONE_WIN
 using Microsoft.Win32;
@@ -65,5 +66,54 @@ namespace GrumpyFoxGames
         }
 #endif
 
+        
+#if UNITY_STANDALONE_LINUX
+        public static List<string> FindSerialPortsByVIDPID_Linux(string vid, string pid)
+    {
+        var output = new List<string>();
+
+        // Check the /dev/ directory for serial devices
+        string devPath = "/sys/class/tty/";
+
+        try
+        {
+            // List all devices in /dev
+            var serialPorts = Directory.GetFiles(devPath, "ttyACM*");
+
+            foreach (var serialPort in serialPorts)
+            {
+                UnityEngine.Debug.LogError(serialPort);
+                // // Check if the serial port corresponds to a USB device
+                // string sysPath = $"/sys/class/tty/{Path.GetFileName(serialPort)}/device/";
+
+                // if (Directory.Exists(sysPath))
+                // {
+                //     // Read the vendor ID and product ID from the sysfs
+                //     string vendorPath = Path.Combine(sysPath, "idVendor");
+                //     string productPath = Path.Combine(sysPath, "idProduct");
+                //
+                //     if (File.Exists(vendorPath) && File.Exists(productPath))
+                //     {
+                //         string vendorId = File.ReadAllText(vendorPath).Trim();
+                //         string productId = File.ReadAllText(productPath).Trim();
+                //
+                //         // Check if the VID and PID match
+                //         if (vendorId.Equals(vid, StringComparison.OrdinalIgnoreCase) &&
+                //             productId.Equals(pid, StringComparison.OrdinalIgnoreCase))
+                //         {
+                //             output.Add(serialPort);
+                //         }
+                //     }
+                // }
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error: {ex.Message}");
+        }
+
+        return output;
+    }
+#endif
     }
 }
