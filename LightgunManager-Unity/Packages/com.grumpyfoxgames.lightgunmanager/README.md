@@ -2,6 +2,8 @@
 
 Automatically detects lightguns and send commands through COM serial ports.
 
+Package code can be found at [LightgunManager-Unity/Packages/com.grumpyfoxgames.lightgunmanager](https://github.com/tales-sampaio/lightgun-manager/tree/main/LightgunManager-Unity/Packages/com.grumpyfoxgames.lightgunmanager).
+
 ## Installation
 
 This package is available on [OpenUPM](https://openupm.com). To install it:
