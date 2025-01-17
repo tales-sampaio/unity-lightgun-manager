@@ -12,29 +12,77 @@ namespace GrumpyFoxGames
         private static bool isConnected;
         private static bool isVerbose;
         private static int pollingRate = 16;
+        private static string connectedGun;
         
         private static Thread communicationThread;
         private static SerialPort serialPort;
         private static readonly ConcurrentQueue<string> commandQueue = new ();
         
-        public static readonly string vid =               INIReader.GetValue("Gun4IR", "VID");
-        public static readonly string pid =               INIReader.GetValue("Gun4IR", "PID");
-        private static readonly string startCommand =     INIReader.GetValue("Gun4IR", "Start");
-        private static readonly string stopCommand =      INIReader.GetValue("Gun4IR", "Stop");
-        private static readonly string shootCommand =     INIReader.GetValue("Gun4IR", "Shoot");
-        private static readonly string reloadCommand =    INIReader.GetValue("Gun4IR", "Reload");
-        private static readonly string damageCommand =    INIReader.GetValue("Gun4IR", "Damage");
-        private static readonly string outOfAmmoCommand = INIReader.GetValue("Gun4IR", "OutOfAmmo");
-
 #region Public
+
+        public struct Gun
+        {
+            public string name;
+            public GunSettings settings;
+        }
+        
+        public struct GunSettings
+        {
+            public string vid;
+            public string pid;
+            public string baud;
+            public string startCommand;
+            public string stopCommand;
+            public string shootCommand;
+            public string reloadCommand;
+            public string damageCommand;
+            public string outOfAmmoCommand;
+        }
+
+        public static GunSettings currentGunSettings;
+
+        public static Gun[] guns =
+        {
+            new Gun
+            {
+                name = "RetroShooter",
+                settings = new GunSettings
+                {
+                    vid =              INIReader.GetValue("RetroShooter", "VID"),
+                    pid =              INIReader.GetValue("RetroShooter", "PID"),
+                    baud =             INIReader.GetValue("RetroShooter", "BAUD"),
+                    startCommand =     INIReader.GetValue("RetroShooter", "Start"),
+                    stopCommand =      INIReader.GetValue("RetroShooter", "Stop"),
+                    shootCommand =     INIReader.GetValue("RetroShooter", "Shoot"),
+                    reloadCommand =    INIReader.GetValue("RetroShooter", "Reload"),
+                    damageCommand =    INIReader.GetValue("RetroShooter", "Damage"),
+                    outOfAmmoCommand = INIReader.GetValue("RetroShooter", "OutOfAmmo")
+                }
+            },
+            new Gun
+            {
+                name = "Gun4IR",
+                settings = new GunSettings
+                {
+                    vid =              INIReader.GetValue("Gun4IR", "VID"),
+                    pid =              INIReader.GetValue("Gun4IR", "PID"),
+                    baud =             INIReader.GetValue("Gun4IR", "BAUD"),
+                    startCommand =     INIReader.GetValue("Gun4IR", "Start"),
+                    stopCommand =      INIReader.GetValue("Gun4IR", "Stop"),
+                    shootCommand =     INIReader.GetValue("Gun4IR", "Shoot"),
+                    reloadCommand =    INIReader.GetValue("Gun4IR", "Reload"),
+                    damageCommand =    INIReader.GetValue("Gun4IR", "Damage"),
+                    outOfAmmoCommand = INIReader.GetValue("Gun4IR", "OutOfAmmo")
+                }
+            }
+        };
 
         public static bool IsConnected => isConnected;
         public static string ConnectedPort => serialPort != null ? serialPort.PortName : string.Empty;
-
+        public static string DetectedGun => connectedGun;
+        
         public static void Start(bool verboseLogging = false)
         {
-            // Read INI values
-            
             if (pollingRate < 16)
             {
                 LogError("Polling rate must be at least 10ms.");
@@ -73,22 +121,22 @@ namespace GrumpyFoxGames
 
         public static void SendCommand_Shoot()
         {
-            SendCommand(shootCommand);
+            SendCommand(currentGunSettings.shootCommand);
         }
         
         public static void SendCommand_Reload()
         {
-            SendCommand(reloadCommand);
+            SendCommand(currentGunSettings.reloadCommand);
         }
         
         public static void SendCommand_Damage()
         {
-            SendCommand(damageCommand);
+            SendCommand(currentGunSettings.damageCommand);
         }
         
         public static void SendCommand_OutOfAmmo()
         {
-            SendCommand(outOfAmmoCommand);
+            SendCommand(currentGunSettings.outOfAmmoCommand);
         }
         
 #endregion
@@ -128,14 +176,14 @@ namespace GrumpyFoxGames
                         if (commandQueue.TryDequeue(out string command))
                         {
                             // Log($"dequeuing: \"{command}\"");
-                            serialPort.WriteLine(command);
+                            serialPort.Write(command);
                         }
 
                         // Optionally read incoming data
                         if (serialPort.BytesToRead > 0)
                         {
                             var response = serialPort.ReadLine();
-                            // Log($"Arduino Response: {response}");
+                            Log($"Response: {response}");
                         }
                     }
                 }
@@ -157,48 +205,59 @@ namespace GrumpyFoxGames
 
         private static void SearchAndConnect()
         {
-            // Look for defined port names for the specific device
-            var targetDevicePortNames = COMPortSearcher.FindCOMPortsByVIDPID(vid, pid);
-
-            // Look for connected COM ports available to look for the target devices
-            foreach (string connectedPortName in SerialPort.GetPortNames())
+            foreach (var gun in guns)
             {
-                Log($"Analyzing \"{connectedPortName}\"...");
+                Log($"Searching for \"{gun.name}\"");
+                currentGunSettings = gun.settings;
+                
+                // Look for defined port names for the specific device
+                var targetDevicePortNames = COMPortSearcher.FindCOMPortsByVIDPID(currentGunSettings.vid, currentGunSettings.pid);
 
-                foreach (var devicePortName in targetDevicePortNames)
+                // Look for connected COM ports available to look for the target devices
+                foreach (string connectedPortName in SerialPort.GetPortNames())
                 {
+                    Log($"Analyzing \"{connectedPortName}\"...");
 
-                    if (!connectedPortName.Equals(devicePortName)) continue;
-
-                    try
+                    foreach (var devicePortName in targetDevicePortNames)
                     {
-                        Log($"Attempting to connect to \"{connectedPortName}\"");
-                        
-                        serialPort = new SerialPort(connectedPortName, 9600)
-                        {
-                            ReadTimeout = 500, // Prevent infinite blocking
-                            WriteTimeout = 500
-                        };
+                        if (!connectedPortName.Equals(devicePortName)) continue;
 
-                        serialPort.Open();
-                        Thread.Sleep(1000); // Wait for the port to stabilize
-
-                        if (serialPort.IsOpen)
+                        try
                         {
-                            Log($"Connected to \"{connectedPortName}\"");
-                            serialPort.WriteLine(startCommand);
-                            isConnected = true;
-                            return;
+                            var baudRate = int.Parse(currentGunSettings.baud);
+                            
+                            Log($"Attempting to connect to \"{connectedPortName}\" with baud rate of {baudRate}.");
+                            
+                            serialPort = new SerialPort(connectedPortName, baudRate)
+                            {
+                                ReadTimeout = 500, // Prevent infinite blocking
+                                WriteTimeout = 500
+                            };
+
+                            serialPort.Open();
+                            Thread.Sleep(1000); // Wait for the port to stabilize
+
+                            if (serialPort.IsOpen)
+                            {
+                                connectedGun = gun.name;
+                                Log($"Connected to \"{gun.name}\" on \"{connectedPortName}\"");
+                                Log($"Sending command \"{currentGunSettings.startCommand}\"");
+                                isConnected = true;
+                                SendCommand(currentGunSettings.startCommand);
+                                SendCommand_Shoot();
+                                SendCommand_Damage();
+                                return;
+                            }
                         }
-                    }
-                    catch (Exception ex)
-                    {
-                        LogWarning($"Failed to connect to \"{connectedPortName}\": {ex.Message}");
-                    }
+                        catch (Exception ex)
+                        {
+                            LogWarning($"Failed to connect to \"{connectedPortName}\": {ex.Message}");
+                        }
 
+                    }
                 }
             }
-
+            
             LogWarning("No suitable device found!");
         }
 
@@ -211,7 +270,7 @@ namespace GrumpyFoxGames
             {
                 try
                 {
-                    serialPort.WriteLine(stopCommand);
+                    serialPort.Write(currentGunSettings.stopCommand);
                     serialPort.Close();
                 }
                 catch (Exception ex)
