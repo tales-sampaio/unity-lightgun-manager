@@ -42,10 +42,32 @@ public class App : MonoBehaviour
 
     private void Update()
     {
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            LightgunManager.SendCommand_Shoot();
+        }
+        
+        if (Input.GetKeyDown(KeyCode.Alpha2))
+        {
+            LightgunManager.SendCommand_Reload();
+        }
+        
+        if (Input.GetKeyDown(KeyCode.Alpha3))
+        {
+            LightgunManager.SendCommand_Damage();
+        }
+        
+        if (Input.GetKeyDown(KeyCode.Alpha4))
+        {
+            LightgunManager.SendCommand_OutOfAmmo();
+        }
+        
         debugText.text = $"Port:\t\t {(LightgunManager.IsConnected ? LightgunManager.ConnectedPort : string.Empty)}\n" +
                      $"Connected:\t {LightgunManager.IsConnected}\n" +
-                     $"VID:\t {LightgunManager.vid}\n" +
-                     $"PID:\t {LightgunManager.pid}\n" +
+                     $"Detected:\t {LightgunManager.DetectedGun}\n" +
+                     $"VID:\t {LightgunManager.currentGunSettings.vid}\n" +
+                     $"PID:\t {LightgunManager.currentGunSettings.pid}\n" +
+                     $"BAUD:\t {LightgunManager.currentGunSettings.baud}\n" +
                      $"Control:\t {_lastControl}\n" +
                      $"Cursor:\t {_cursorTarget}\n" +
                      $"Shoot:\t {_shooting}\n" +
