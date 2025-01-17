@@ -64,8 +64,10 @@ public class App : MonoBehaviour
         
         debugText.text = $"Port:\t\t {(LightgunManager.IsConnected ? LightgunManager.ConnectedPort : string.Empty)}\n" +
                      $"Connected:\t {LightgunManager.IsConnected}\n" +
-                     $"VID:\t {LightgunManager.vid}\n" +
-                     $"PID:\t {LightgunManager.pid}\n" +
+                     $"Detected:\t {LightgunManager.DetectedGun}\n" +
+                     $"VID:\t {LightgunManager.currentGunSettings.vid}\n" +
+                     $"PID:\t {LightgunManager.currentGunSettings.pid}\n" +
+                     $"BAUD:\t {LightgunManager.currentGunSettings.baud}\n" +
                      $"Control:\t {_lastControl}\n" +
                      $"Cursor:\t {_cursorTarget}\n" +
                      $"Shoot:\t {_shooting}\n" +
