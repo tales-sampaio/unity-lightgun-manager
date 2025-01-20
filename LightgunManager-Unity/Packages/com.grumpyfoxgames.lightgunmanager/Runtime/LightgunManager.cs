@@ -9,10 +9,12 @@ namespace GrumpyFoxGames
     public static class LightgunManager
     {
         private static bool isRunning;
+        private static bool isDetected;
         private static bool isConnected;
         private static bool isVerbose;
         private static int pollingRate = 16;
-        private static string connectedGun;
+        private static string detectedGun;
+        private static string detectedPort;
         
         private static Thread communicationThread;
         private static SerialPort serialPort;
@@ -41,45 +43,19 @@ namespace GrumpyFoxGames
 
         public static GunSettings currentGunSettings;
 
-        public static Gun[] guns =
-        {
-            new Gun
-            {
-                name = "RetroShooter",
-                settings = new GunSettings
-                {
-                    vid =              INIReader.GetValue("RetroShooter", "VID"),
-                    pid =              INIReader.GetValue("RetroShooter", "PID"),
-                    baud =             INIReader.GetValue("RetroShooter", "BAUD"),
-                    startCommand =     INIReader.GetValue("RetroShooter", "Start"),
-                    stopCommand =      INIReader.GetValue("RetroShooter", "Stop"),
-                    shootCommand =     INIReader.GetValue("RetroShooter", "Shoot"),
-                    reloadCommand =    INIReader.GetValue("RetroShooter", "Reload"),
-                    damageCommand =    INIReader.GetValue("RetroShooter", "Damage"),
-                    outOfAmmoCommand = INIReader.GetValue("RetroShooter", "OutOfAmmo")
-                }
-            },
-            new Gun
-            {
-                name = "Gun4IR",
-                settings = new GunSettings
-                {
-                    vid =              INIReader.GetValue("Gun4IR", "VID"),
-                    pid =              INIReader.GetValue("Gun4IR", "PID"),
-                    baud =             INIReader.GetValue("Gun4IR", "BAUD"),
-                    startCommand =     INIReader.GetValue("Gun4IR", "Start"),
-                    stopCommand =      INIReader.GetValue("Gun4IR", "Stop"),
-                    shootCommand =     INIReader.GetValue("Gun4IR", "Shoot"),
-                    reloadCommand =    INIReader.GetValue("Gun4IR", "Reload"),
-                    damageCommand =    INIReader.GetValue("Gun4IR", "Damage"),
-                    outOfAmmoCommand = INIReader.GetValue("Gun4IR", "OutOfAmmo")
-                }
-            }
-        };
-
+        public delegate void OnGunDetected();
+        public static event OnGunDetected onGunDetected;
+        
+        public delegate void OnGunConnected();
+        public static event OnGunConnected onGunConnected;
+        
+        public delegate void OnGunDisconnected();
+        public static event OnGunDisconnected onGunDisconnected;
+        
+        public static bool IsDetected => isDetected;
         public static bool IsConnected => isConnected;
         public static string ConnectedPort => serialPort != null ? serialPort.PortName : string.Empty;
-        public static string DetectedGun => connectedGun;
+        public static string DetectedGun => detectedGun;
         
         public static void Start(bool verboseLogging = false)
         {
@@ -142,6 +118,58 @@ namespace GrumpyFoxGames
 #endregion
 
 #region Private
+    private static Gun[] guns =
+    {
+        new Gun
+        {
+            name = "RetroShooter",
+            settings = new GunSettings
+            {
+                vid =              INIReader.GetValue("RetroShooter", "VID"),
+                pid =              INIReader.GetValue("RetroShooter", "PID"),
+                baud =             INIReader.GetValue("RetroShooter", "BAUD"),
+                startCommand =     INIReader.GetValue("RetroShooter", "Start"),
+                stopCommand =      INIReader.GetValue("RetroShooter", "Stop"),
+                shootCommand =     INIReader.GetValue("RetroShooter", "Shoot"),
+                reloadCommand =    INIReader.GetValue("RetroShooter", "Reload"),
+                damageCommand =    INIReader.GetValue("RetroShooter", "Damage"),
+                outOfAmmoCommand = INIReader.GetValue("RetroShooter", "OutOfAmmo")
+            }
+        },
+        new Gun
+        {
+            name = "Gun4IR",
+            settings = new GunSettings
+            {
+                vid =              INIReader.GetValue("Gun4IR", "VID"),
+                pid =              INIReader.GetValue("Gun4IR", "PID"),
+                baud =             INIReader.GetValue("Gun4IR", "BAUD"),
+                startCommand =     INIReader.GetValue("Gun4IR", "Start"),
+                stopCommand =      INIReader.GetValue("Gun4IR", "Stop"),
+                shootCommand =     INIReader.GetValue("Gun4IR", "Shoot"),
+                reloadCommand =    INIReader.GetValue("Gun4IR", "Reload"),
+                damageCommand =    INIReader.GetValue("Gun4IR", "Damage"),
+                outOfAmmoCommand = INIReader.GetValue("Gun4IR", "OutOfAmmo")
+            }
+        },
+        new Gun
+        {
+            name = "Sinden",
+            settings = new GunSettings
+            {
+                vid =              INIReader.GetValue("Sinden", "VID"),
+                pid =              INIReader.GetValue("Sinden", "PID"),
+                baud =             INIReader.GetValue("Sinden", "BAUD"),
+                startCommand =     INIReader.GetValue("Sinden", "Start"),
+                stopCommand =      INIReader.GetValue("Sinden", "Stop"),
+                shootCommand =     INIReader.GetValue("Sinden", "Shoot"),
+                reloadCommand =    INIReader.GetValue("Sinden", "Reload"),
+                damageCommand =    INIReader.GetValue("Sinden", "Damage"),
+                outOfAmmoCommand = INIReader.GetValue("Sinden", "OutOfAmmo")
+            }
+        }
+    };
+
         private static void StartCommunicationThread()
         {
             isRunning = true;
@@ -162,8 +190,29 @@ namespace GrumpyFoxGames
                 {
                     if (!isConnected)
                     {
-                        LogWarning("Not connected yet...");
-                        SearchAndConnect();
+                        if (isDetected)
+                        {
+                            var stillDetected = false;
+                        
+                            foreach (var port in SerialPort.GetPortNames())
+                            {
+                                if (port.Equals(detectedPort))
+                                {
+                                    stillDetected = true;
+                                    break;
+                                }
+                            }
+
+                            if (!stillDetected)
+                            {
+                                Disconnect();
+                            }
+                        }
+                        else
+                        {
+                            LogWarning("Not connected yet...");
+                            SearchAndConnect();
+                        }
                     }
                     else if (serialPort != null)
                     {
@@ -208,10 +257,10 @@ namespace GrumpyFoxGames
             foreach (var gun in guns)
             {
                 Log($"Searching for \"{gun.name}\"");
-                currentGunSettings = gun.settings;
+                var gunSettings = gun.settings;
                 
                 // Look for defined port names for the specific device
-                var targetDevicePortNames = COMPortSearcher.FindCOMPortsByVIDPID(currentGunSettings.vid, currentGunSettings.pid);
+                var targetDevicePortNames = COMPortSearcher.FindCOMPortsByVIDPID(gunSettings.vid, gunSettings.pid);
 
                 // Look for connected COM ports available to look for the target devices
                 foreach (string connectedPortName in SerialPort.GetPortNames())
@@ -222,9 +271,17 @@ namespace GrumpyFoxGames
                     {
                         if (!connectedPortName.Equals(devicePortName)) continue;
 
+                        Log($"Detected a \"{gun.name}\" on \"{connectedPortName}\"");
+                        isDetected = true;
+                        detectedGun = gun.name;
+                        detectedPort = devicePortName;
+                        currentGunSettings = gunSettings;
+                        
+                        onGunDetected?.Invoke();
+                        
                         try
                         {
-                            var baudRate = int.Parse(currentGunSettings.baud);
+                            var baudRate = int.Parse(gunSettings.baud);
                             
                             Log($"Attempting to connect to \"{connectedPortName}\" with baud rate of {baudRate}.");
                             
@@ -239,13 +296,14 @@ namespace GrumpyFoxGames
 
                             if (serialPort.IsOpen)
                             {
-                                connectedGun = gun.name;
                                 Log($"Connected to \"{gun.name}\" on \"{connectedPortName}\"");
-                                Log($"Sending command \"{currentGunSettings.startCommand}\"");
+                                Log($"Sending command \"{gunSettings.startCommand}\"");
                                 isConnected = true;
                                 SendCommand(currentGunSettings.startCommand);
                                 SendCommand_Shoot();
                                 SendCommand_Damage();
+                                
+                                onGunConnected?.Invoke();
                                 return;
                             }
                         }
@@ -265,6 +323,9 @@ namespace GrumpyFoxGames
         {
             LogWarning("Disconnecting...");
             isConnected = false;
+            isDetected = false;
+            detectedGun = string.Empty;
+            currentGunSettings = new GunSettings();
 
             if (serialPort != null)
             {
@@ -280,6 +341,7 @@ namespace GrumpyFoxGames
             }
 
             serialPort = null;
+            onGunDisconnected?.Invoke();
         }
         
 #endregion
