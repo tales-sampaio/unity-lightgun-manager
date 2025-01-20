@@ -31,7 +31,7 @@ public class App : MonoBehaviour
         _shootAction = InputSystem.actions.FindAction("Shoot");
         _reloadAction = InputSystem.actions.FindAction("Reload");
         _playerInput.onActionTriggered += OnActionTriggered;
-        LightgunManager.Start();
+        LightgunManager.Start(true);
     }
 
     private void OnDestroy()
@@ -62,17 +62,19 @@ public class App : MonoBehaviour
             LightgunManager.SendCommand_OutOfAmmo();
         }
         
-        debugText.text = $"Port:\t\t {(LightgunManager.IsConnected ? LightgunManager.ConnectedPort : string.Empty)}\n" +
-                     $"Connected:\t {LightgunManager.IsConnected}\n" +
-                     $"Detected:\t {LightgunManager.DetectedGun}\n" +
-                     $"VID:\t {LightgunManager.currentGunSettings.vid}\n" +
-                     $"PID:\t {LightgunManager.currentGunSettings.pid}\n" +
-                     $"BAUD:\t {LightgunManager.currentGunSettings.baud}\n" +
-                     $"Control:\t {_lastControl}\n" +
-                     $"Cursor:\t {_cursorTarget}\n" +
-                     $"Shoot:\t {_shooting}\n" +
-                     $"Reload:\t {_reloading}";
-    }
+        debugText.text =
+            $"Control:\t {_lastControl}\n" +
+            $"Detected:\t {LightgunManager.IsDetected}\n" +
+            $"Gun:\t\t {LightgunManager.DetectedGun}\n" +
+            $"Connected:\t {LightgunManager.IsConnected}\n" +
+            $"VID:\t\t {LightgunManager.currentGunSettings.vid}\n" +
+            $"PID:\t\t {LightgunManager.currentGunSettings.pid}\n" +
+            $"Port:\t\t {(LightgunManager.IsConnected ? LightgunManager.ConnectedPort : string.Empty)}\n" +
+            $"BAUD:\t {LightgunManager.currentGunSettings.baud}\n" +
+            $"Cursor:\t {_cursorTarget}\n" +
+            $"Shoot:\t {_shooting}\n" +
+            $"Reload:\t {_reloading}";
+    }   
 
     private void LateUpdate()
     {
