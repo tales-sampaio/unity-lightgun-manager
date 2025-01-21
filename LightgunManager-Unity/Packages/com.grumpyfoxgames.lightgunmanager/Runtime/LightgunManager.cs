@@ -322,10 +322,6 @@ namespace GrumpyFoxGames
         private static void Disconnect()
         {
             LogWarning("Disconnecting...");
-            isConnected = false;
-            isDetected = false;
-            detectedGun = string.Empty;
-            currentGunSettings = new GunSettings();
 
             if (serialPort != null)
             {
@@ -333,14 +329,19 @@ namespace GrumpyFoxGames
                 {
                     serialPort.Write(currentGunSettings.stopCommand);
                     serialPort.Close();
+                    isConnected = false;
+                    serialPort = null;
                 }
                 catch (Exception ex)
                 {
                     LogWarning($"Error closing serial port: {ex.Message}");
                 }
             }
-
-            serialPort = null;
+            
+            isDetected = false;
+            detectedGun = string.Empty;
+            currentGunSettings = new GunSettings();
+            
             onGunDisconnected?.Invoke();
         }
         
