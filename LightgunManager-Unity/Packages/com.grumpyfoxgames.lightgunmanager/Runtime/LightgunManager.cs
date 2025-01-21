@@ -297,7 +297,7 @@ namespace GrumpyFoxGames
                             if (serialPort.IsOpen)
                             {
                                 Log($"Connected to \"{gun.name}\" on \"{connectedPortName}\"");
-                                Log($"Sending command \"{gunSettings.startCommand}\"");
+                                Log($"Sending command: {gunSettings.startCommand}");
                                 isConnected = true;
                                 SendCommand(currentGunSettings.startCommand);
                                 SendCommand_Shoot();
