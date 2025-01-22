@@ -60,6 +60,10 @@ namespace GrumpyFoxGames
         
         public static void Start(bool verboseLogging = false)
         {
+#if UNITY_ANDROID
+            return;
+#endif
+            
             if (pollingRate < 16)
             {
                 LogError("Polling rate must be at least 10ms.");
@@ -73,6 +77,9 @@ namespace GrumpyFoxGames
 
         public static void Stop()
         {
+#if UNITY_ANDROID
+            return;
+#endif
             isRunning = false;
 
             if (communicationThread != null && communicationThread.IsAlive)
@@ -85,6 +92,9 @@ namespace GrumpyFoxGames
         
         public static void SendCommand(string command)
         {
+#if UNITY_ANDROID
+            return;
+#endif
             if (isConnected)
             {
                 Log($"Sending command: {command}");

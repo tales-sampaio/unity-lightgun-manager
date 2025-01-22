@@ -12,6 +12,7 @@ namespace GrumpyFoxGames
 
         public void OnPostprocessBuild(BuildReport report)
         {
+#if UNITY_STANDALONE
             var iniPath = INIReader.GetINIPath();
             var destinationFilePath = Path.Combine(Path.GetDirectoryName(report.summary.outputPath), INIReader.GetINIFileName());
 
@@ -31,6 +32,7 @@ namespace GrumpyFoxGames
             {
                 Debug.LogError($"[INIReader] Failed to copy file: {ex.Message}");
             }
+#endif
         }
     }
 }

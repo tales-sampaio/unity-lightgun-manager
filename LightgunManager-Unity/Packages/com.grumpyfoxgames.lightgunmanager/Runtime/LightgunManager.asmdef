@@ -3,6 +3,7 @@
     "rootNamespace": "",
     "references": [],
     "includePlatforms": [
+        "Android",
         "Editor",
         "WSA",
         "WindowsStandalone32",

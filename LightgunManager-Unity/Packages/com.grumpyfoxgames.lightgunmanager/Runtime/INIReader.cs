@@ -22,6 +22,10 @@ namespace GrumpyFoxGames
         /// <returns>The value associated with the key in the section.</returns>
         public static string GetValue(string section, string key)
         {
+#if UNITY_ANDROID
+            return string.Empty;
+#endif
+            
             if (!_isInitialized)
             {
                 if (string.IsNullOrEmpty(_fileName))
