@@ -13,6 +13,7 @@ namespace GrumpyFoxGames
         private static bool isConnected;
         private static bool isVerbose;
         private static int pollingRate = 16;
+        private static int searchingRate = 500;
         private static string detectedGun;
         private static string detectedPort;
         
@@ -213,6 +214,8 @@ namespace GrumpyFoxGames
                             LogWarning("Not connected yet...");
                             SearchAndConnect();
                         }
+                        
+                        Thread.Sleep(searchingRate); // Prevent tight loop
                     }
                     else if (serialPort != null)
                     {
@@ -292,7 +295,7 @@ namespace GrumpyFoxGames
                             };
 
                             serialPort.Open();
-                            Thread.Sleep(1000); // Wait for the port to stabilize
+                            Thread.Sleep(searchingRate); // Wait for the port to stabilize
 
                             if (serialPort.IsOpen)
                             {
@@ -329,8 +332,6 @@ namespace GrumpyFoxGames
                 {
                     serialPort.Write(currentGunSettings.stopCommand);
                     serialPort.Close();
-                    isConnected = false;
-                    serialPort = null;
                 }
                 catch (Exception ex)
                 {
@@ -338,6 +339,8 @@ namespace GrumpyFoxGames
                 }
             }
             
+            isConnected = false;
+            serialPort = null;
             isDetected = false;
             detectedGun = string.Empty;
             currentGunSettings = new GunSettings();
