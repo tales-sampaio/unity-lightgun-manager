@@ -2,7 +2,7 @@
 
 Automatically detects lightguns and send commands through COM serial ports.
 
-## Installation
+## Installation (This is not true yet! But I wish it will be soon™)
 
 This package is available on [OpenUPM](https://openupm.com). To install it:
 ```bash
