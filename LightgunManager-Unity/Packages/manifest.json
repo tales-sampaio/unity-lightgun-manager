@@ -2,6 +2,7 @@
   "dependencies": {
     "com.unity.ide.rider": "3.0.34",
     "com.unity.inputsystem": "1.11.2",
+    "com.unity.toolchain.linux-x86_64": "2.0.10",
     "com.unity.ugui": "2.0.0"
   }
 }

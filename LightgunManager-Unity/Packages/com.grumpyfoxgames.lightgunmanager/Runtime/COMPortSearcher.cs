@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 #if UNITY_STANDALONE_WIN
 using Microsoft.Win32;
+#elif UNITY_STANDALONE_LINUX
+using System.IO;
+using UnityEngine;
 #endif
 
 namespace GrumpyFoxGames
@@ -13,6 +16,8 @@ namespace GrumpyFoxGames
         {
 #if UNITY_STANDALONE_WIN
             return FindCOMPortsByVIDPID_Windows(vid, pid);
+#elif UNITY_STANDALONE_LINUX
+            return FindSerialPortsByVIDPID_Linux(vid, pid);
 #else
         return null;
 #endif
@@ -65,5 +70,62 @@ namespace GrumpyFoxGames
         }
 #endif
 
+        
+#if UNITY_STANDALONE_LINUX
+        public static List<string> FindSerialPortsByVIDPID_Linux(string vid, string pid)
+    {
+        var output = new List<string>();
+
+        // Check the /dev/ directory for serial devices
+        var devPath = "/sys/class/tty/";
+
+        try
+        {
+            // List all devices in /dev
+            var serialPorts = Directory.GetDirectories(devPath, "ttyACM*");
+            
+            // Debug.LogError($"Found {serialPorts.Length} ports");
+
+            foreach (var serialPort in serialPorts)
+            {
+                // Debug.LogError(serialPort);
+                
+                // Check if the serial port corresponds to a USB device
+                // /sys/class/tty/ttyACM0/device/firmware_node/physical_node1
+                var sysPath = Path.Combine(serialPort, "device/firmware_node/physical_node1");
+                //$"{serialPort}/device/firmware_node/physical_node1";
+                
+                if (Directory.Exists(sysPath))
+                {
+                    // Read the vendor ID and product ID from the sysfs
+                    var vendorPath = Path.Combine(sysPath, "idVendor");
+                    var productPath = Path.Combine(sysPath, "idProduct");
+                
+                    if (File.Exists(vendorPath) && File.Exists(productPath))
+                    {
+                        var vendorId = File.ReadAllText(vendorPath).Trim();
+                        var productId = File.ReadAllText(productPath).Trim();
+                        
+                        // Debug.LogError($"vendorId: {vendorId}");
+                        // Debug.LogError($"productId: {productId}");
+                
+                        // Check if the VID and PID match
+                        if (vendorId.Contains(vid, StringComparison.OrdinalIgnoreCase) &&
+                            productId.Contains(pid, StringComparison.OrdinalIgnoreCase))
+                        {
+                            output.Add(serialPort);
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error: {ex.Message}");
+        }
+
+        return output;
+    }
+#endif
     }
 }
